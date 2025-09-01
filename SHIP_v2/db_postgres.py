@@ -5,12 +5,19 @@ import os
 
 
 # todo use env vars
+#DB_CONFIG = {
+#    'user': 'cc_admin',
+#    'password': 'cc_admin',
+#    'host': 'localhost',
+#    'port': '5432',
+#    'database': 'loans_db'
+#}
 DB_CONFIG = {
-    'user': 'cc_admin',
-    'password': 'cc_admin',
-    'host': 'localhost',
-    'port': '5432',
-    'database': 'loans_db'
+    'user': 'CDR',
+    'password': 'CDR',
+    'host': '172.16.1.236',
+    'port': '8454',
+    'database': 'CDRDB'
 }
 #
 DATABASE_URL = f"postgresql+psycopg2://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
