@@ -6,3 +6,10 @@ geopandas
 streamlit-folium
 folium
 leafmap
+fastapi
+SQLAlchemy
+psycopg2-binary
+platformshconfig
+requests
+flask
+flask-cors

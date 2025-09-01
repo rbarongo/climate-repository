@@ -1,10 +1,16 @@
+import os
+import sys
+
+
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(root_dir)
+
 import streamlit as st
 import pandas as pd
 import requests
 from validation import validate_dataframe
-from utils import stringify_currency
-import numpy as np
-from vars import SERVER_URL, TANZANIA_REGIONS
+from configs.utils import stringify_currency
+from configs.vars import SERVER_URL
 
 st.set_page_config(page_title="Data Collection", page_icon="logo.png", layout="wide")
 logo_col, title_col = st.columns([1, 7], gap="small")

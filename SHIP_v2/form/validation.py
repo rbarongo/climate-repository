@@ -1,6 +1,11 @@
+import os
+import sys
+
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(root_dir)
+
 import pandas as pd
-from vars import COLUMNS, BANK_NAMES
-from datetime import datetime
+from configs.vars import COLUMNS, BANK_NAMES
 
 
 def validate_dataframe(df):

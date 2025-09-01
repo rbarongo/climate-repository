@@ -1,96 +1,78 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import sqlite3
-from datetime import datetime
-import uuid
-from pathlib import Path
-from database import create_table
-
-DB_PATH = Path(__file__).parent / "loans.db"
+import pandas as pd
+from db_postgres import add_loan_data, init_db
 
 app = Flask(__name__)
 CORS(app)
-create_table()
-print(f"Database setup complete. located at: {DB_PATH}")
 
-def add_loan_to_db(data):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    for record in data:
-        cursor.execute('''
-            INSERT INTO loans (
-                customer_id, bank_name, branch_code, branch_name, client_type,
-                business_size, annual_turnover, balance_sheet_size, loan_number,
-                disbursement_date, maturity_date, currency, tzs_disbursed_amount,
-                tzs_outstanding_principal, frequency_of_repayment, interest_rate_type,
-                loan_authorization_type, annual_interest_rate, loan_type,
-                loan_economic_activity, loan_purpose, asset_classification,
-                loan_region, loan_district, loan_ward, loan_street,
-                loan_latitude, loan_longitude, collateral_pledged,
-                collateral_pledged_date, collateral_market_value,
-                collateral_forced_sale_value, collateral_economic_activity,
-                collateral_region, collateral_district, collateral_ward,
-                collateral_street, collateral_latitude, collateral_longitude,
-                climate_risk_insurance, insurance_type, insurance_provider,
-                collateral_protected_value
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            record.get('Customer Identification Number'),
-            record.get('Bank Name'),
-            record.get('Branch Code'),
-            record.get('Branch name'),
-            record.get('Client Type'),
-            record.get('Size of the business'),
-            record.get('Annual turn-over of the borrower'),
-            record.get('Balance Sheet Size'),
-            record.get('Loan number'),
-            record.get('Disbursement Date'),
-            record.get('Maturity Date'),
-            record.get('Currency'),
-            record.get('TZS Disbursed Amount'),
-            record.get('TZS Outstanding Principal Amount'),
-            record.get('Frequency of Repayment'),
-            record.get('Interest Rate Type'),
-            record.get('Loan Authorization Type'),
-            record.get('Annual Interest Rate'),
-            record.get('loan Type/ General Category'),
-            record.get('Loan Economic Activity'),
-            record.get('Purpose of the loan'),
-            record.get('Asset Classification Category'),
-            record.get('Location of invested loan (Region)'),
-            record.get('Location of invested loan (District)'),
-            record.get('Location of invested loan (Ward)'),
-            record.get('Location of invested loan (Street)'),
-            record.get('Invested Loan Geographical coordinates-Latitude'),
-            record.get('Invested Loan Geographical coordinates-Longitude'),
-            record.get('Collateral Pledged'),
-            record.get('Collateral Pledged Date'),
-            record.get('TZS Market value of the collateral'),
-            record.get('TZS Forced Sale Value of the collateral'),
-            record.get('Collateral Economic activity '),
-            record.get('Collateral Region'),
-            record.get('Collateral District'),
-            record.get('Collateral Ward'),
-            record.get('Collateral Street'),
-            record.get('Collateral Geographical Coordinates-Latitude'),
-            record.get('Collateral Geographical Coordinates-Longitude'),
-            record.get('Insurance coverage of the collateral against climate risks '),
-            record.get('Type of insurance policy'),
-            record.get('Name of insurance provider'),
-            record.get('Value of Collateral Protected'),
-
-        ))
-    conn.commit()
-    conn.close()
+try:
+    init_db()
+    print("PostgreSQL database setup complete.")
+except Exception as e:
+    print(f"Error during database initialization: {e}")
 
 
 @app.route('/submit_loan', methods=['POST'])
 def submit_loan():
-    data = request.json
+    json_data = request.json
+    if not json_data:
+        return jsonify({"status": "error", "message": "No data received."}), 400
+
     try:
-        add_loan_to_db(data)
+        df = pd.DataFrame(json_data)
+        column_mapping = {
+            'Customer Identification Number': 'customer_id',
+            'Bank Name': 'bank_name',
+            'Branch Code': 'branch_code',
+            'Branch name': 'branch_name',
+            'Client Type': 'client_type',
+            'Size of the business': 'business_size',
+            'Annual turn-over of the borrower': 'annual_turnover',
+            'Balance Sheet Size': 'balance_sheet_size',
+            'Loan number': 'loan_number',
+            'Disbursement Date': 'disbursement_date',
+            'Maturity Date': 'maturity_date',
+            'Currency': 'currency',
+            'TZS Disbursed Amount': 'tzs_disbursed_amount',
+            'TZS Outstanding Principal Amount': 'tzs_outstanding_principal',
+            'Frequency of Repayment': 'frequency_of_repayment',
+            'Interest Rate Type': 'interest_rate_type',
+            'Loan Authorization Type': 'loan_authorization_type',
+            'Annual Interest Rate': 'annual_interest_rate',
+            'loan Type/ General Category': 'loan_type',
+            'Loan Economic Activity': 'loan_economic_activity',
+            'Purpose of the loan': 'loan_purpose',
+            'Asset Classification Category': 'asset_classification',
+            'Location of invested loan (Region)': 'loan_region',
+            'Location of invested loan (District)': 'loan_district',
+            'Location of invested loan (Ward)': 'loan_ward',
+            'Location of invested loan (Street)': 'loan_street',
+            'Invested Loan Geographical coordinates-Latitude': 'loan_latitude',
+            'Invested Loan Geographical coordinates-Longitude': 'loan_longitude',
+            'Collateral Pledged': 'collateral_pledged',
+            'Collateral Pledged Date': 'collateral_pledged_date',
+            'TZS Market value of the collateral': 'collateral_market_value',
+            'TZS Forced Sale Value of the collateral': 'collateral_forced_sale_value',
+            'Collateral Economic activity ': 'collateral_economic_activity',
+            'Collateral Region': 'collateral_region',
+            'Collateral District': 'collateral_district',
+            'Collateral Ward': 'collateral_ward',
+            'Collateral Street': 'collateral_street',
+            'Collateral Geographical Coordinates-Latitude': 'collateral_latitude',
+            'Collateral Geographical Coordinates-Longitude': 'collateral_longitude',
+            'Insurance coverage of the collateral against climate risks ': 'climate_risk_insurance',
+            'Type of insurance policy': 'insurance_type',
+            'Name of insurance provider': 'insurance_provider',
+            'Value of Collateral Protected': 'collateral_protected_value'
+        }
+        df.rename(columns=column_mapping, inplace=True)
+        add_loan_data(df)
+
         return jsonify({"status": "success", "message": "Loan data submitted successfully."}), 201
+
     except Exception as e:
+        print(f"An error occurred: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
